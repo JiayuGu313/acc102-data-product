@@ -1,4 +1,4 @@
-# ACC102 Mini Assignment: Python Data Product
+# ACC102 Mini Assignment: Python Data Analysis Project
 # Track 2 – GitHub Data Analysis Project
 # Student ID: 2473457
 # Student Name: Jiayu Gu
@@ -13,19 +13,18 @@ import warnings
 warnings.filterwarnings('ignore')
 
 def main():
-    # 基础设置
     os.makedirs('output', exist_ok=True)
     plt.rcParams['axes.unicode_minus'] = False
 
     # ------------------------------------------------------------------------------
-    # 🔥 兼容所有环境的 WRDS 连接（必须手动输入账号密码！）
+    # 🔥 WRDS Connection
     # ------------------------------------------------------------------------------
     print("=" * 60)
     print("Connecting to WRDS...")
     print("=" * 60)
 
     try:
-        db = wrds.Connection(wrds_username="YOUR_WRDS_USERNAME")  # 必须写你的WRDS用户名
+        db = wrds.Connection(wrds_username="YOUR_WRDS_USERNAME")
         print("✅ WRDS connected successfully!")
     except Exception as e:
         print(f"❌ WRDS connection failed: {e}")
@@ -33,7 +32,7 @@ def main():
         db = None
 
     # ------------------------------------------------------------------------------
-    # 数据获取（空值全部填 0）
+    # Data Fetching
     # ------------------------------------------------------------------------------
     def get_company_financials(ticker, start_year, end_year):
         if db is None:
@@ -70,7 +69,7 @@ def main():
         return data.fillna(0)
 
     # ------------------------------------------------------------------------------
-    # 🔥 绝对不报错的生命周期判断
+    # Lifecycle Classification
     # ------------------------------------------------------------------------------
     def assign_lifecycle(df):
         if df.empty:
@@ -96,7 +95,7 @@ def main():
         return df
 
     # ------------------------------------------------------------------------------
-    # 计算指标
+    # Performance Metrics
     # ------------------------------------------------------------------------------
     def calculate_metrics(returns):
         if returns.empty or len(returns) < 12:
@@ -119,39 +118,77 @@ def main():
         }
 
     # ------------------------------------------------------------------------------
-    # 绘图（修复了 .at 冲突）
+    # Enhanced Plotting with FULL English Labels, Titles, Axes
     # ------------------------------------------------------------------------------
     def plot_financial(fin, ticker):
         if fin.empty:
             return
 
-        fig, ax = plt.subplots(2, 2, figsize=(14, 8))
-        ax[0,0].plot(fin['fyear'], fin['sale'], 'o-')
-        ax[0,0].set_title("Revenue")
-        ax[0,1].plot(fin['fyear'], fin['at'], 'o-')
-        ax[0,1].set_title("Total Assets")
-        ax[1,0].plot(fin['fyear'], fin['ib'], 'o-')
-        ax[1,0].axhline(0, color='r')
-        ax[1,0].set_title("Net Income")
-        ax[1,1].plot(fin['fyear'], fin['oancf'], label='OCF')
-        ax[1,1].plot(fin['fyear'], fin['invch'], label='ICF')
-        ax[1,1].plot(fin['fyear'], fin['fincf'], label='FCF')
+        fig, ax = plt.subplots(2, 2, figsize=(16, 10))
+        fig.suptitle(f'Financial Performance of {ticker}', fontsize=16, fontweight='bold')
+
+        # Revenue
+        ax[0,0].plot(fin['fyear'], fin['sale'], 'o-', color='#1f77b4', linewidth=2, markersize=6)
+        ax[0,0].set_title('Total Revenue', fontsize=12, fontweight='bold')
+        ax[0,0].set_xlabel('Fiscal Year')
+        ax[0,0].set_ylabel('Revenue (USD)')
+        ax[0,0].grid(alpha=0.3)
+
+        # Total Assets
+        ax[0,1].plot(fin['fyear'], fin['at'], 'o-', color='#ff7f0e', linewidth=2, markersize=6)
+        ax[0,1].set_title('Total Assets', fontsize=12, fontweight='bold')
+        ax[0,1].set_xlabel('Fiscal Year')
+        ax[0,1].set_ylabel('Assets (USD)')
+        ax[0,1].grid(alpha=0.3)
+
+        # Net Income
+        ax[1,0].plot(fin['fyear'], fin['ib'], 'o-', color='#2ca02c', linewidth=2, markersize=6)
+        ax[1,0].axhline(0, color='red', linestyle='--', linewidth=1.5)
+        ax[1,0].set_title('Net Income', fontsize=12, fontweight='bold')
+        ax[1,0].set_xlabel('Fiscal Year')
+        ax[1,0].set_ylabel('Net Income (USD)')
+        ax[1,0].grid(alpha=0.3)
+
+        # Cash Flows
+        ax[1,1].plot(fin['fyear'], fin['oancf'], 'o-', label='Operating Cash Flow', linewidth=2)
+        ax[1,1].plot(fin['fyear'], fin['invch'], 'o-', label='Investing Cash Flow', linewidth=2)
+        ax[1,1].plot(fin['fyear'], fin['fincf'], 'o-', label='Financing Cash Flow', linewidth=2)
+        ax[1,1].set_title('Cash Flow Components', fontsize=12, fontweight='bold')
+        ax[1,1].set_xlabel('Fiscal Year')
+        ax[1,1].set_ylabel('Cash Flow (USD)')
         ax[1,1].legend()
+        ax[1,1].grid(alpha=0.3)
+
         plt.tight_layout()
         plt.show()
 
-    def plot_stock(returns):
+    def plot_stock(returns, ticker):
         if returns.empty:
             return
 
-        fig, ax = plt.subplots(2, 1, figsize=(12, 6))
-        ax[0].bar(range(len(returns)), returns['ret'])
-        ax[1].plot((1 + returns['ret']).cumprod())
+        fig, ax = plt.subplots(2, 1, figsize=(14, 8))
+        fig.suptitle(f'Stock Performance of {ticker}', fontsize=16, fontweight='bold')
+
+        # Monthly Returns
+        ax[0].bar(range(len(returns)), returns['ret'], color='#1f77b4', alpha=0.7)
+        ax[0].set_title('Monthly Stock Returns', fontsize=12, fontweight='bold')
+        ax[0].set_xlabel('Month Index')
+        ax[0].set_ylabel('Monthly Return')
+        ax[0].axhline(0, color='red', linestyle='--')
+        ax[0].grid(alpha=0.3)
+
+        # Cumulative Returns
+        ax[1].plot((1 + returns['ret']).cumprod(), color='#ff7f0e', linewidth=2.5)
+        ax[1].set_title('Cumulative Return', fontsize=12, fontweight='bold')
+        ax[1].set_xlabel('Month Index')
+        ax[1].set_ylabel('Cumulative Value')
+        ax[1].grid(alpha=0.3)
+
         plt.tight_layout()
         plt.show()
 
     # ------------------------------------------------------------------------------
-    # 主程序执行逻辑
+    # Main Program Execution
     # ------------------------------------------------------------------------------
     if db is None:
         print("❌ Cannot run without WRDS connection!")
@@ -179,9 +216,9 @@ def main():
         print(f"{k}: {v}")
 
     plot_financial(fin, ticker)
-    plot_stock(ret)
+    plot_stock(ret, ticker)
 
-    # 关闭数据库连接
+    # Close DB connection
     if db is not None:
         db.close()
         print("\n🔌 WRDS connection closed")
