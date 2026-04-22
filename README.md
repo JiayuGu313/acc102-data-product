@@ -28,10 +28,8 @@ This interactive web application is built with Streamlit and Python, connecting 
 ## 3. How to Run
 1. Install required packages:
 pip install streamlit wrds pandas matplotlib numpy openpyxl
-plaintext
 2. Run the app:
 streamlit run app.py
-plaintext
 3. Enter your WRDS username and password in the sidebar
 4. Click Connect to WRDS
 5. Choose page: Dual Stock Comparison or Industry Benchmark
